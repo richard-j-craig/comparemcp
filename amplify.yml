@@ -6,8 +6,8 @@ frontend:
         - npm install --legacy-peer-deps
     build:
       commands:
-        - npx expo export:web
+        - npx expo export --platform web
   artifacts:
-    baseDirectory: web-build
+    baseDirectory: dist
     files:
       - '**/*'
