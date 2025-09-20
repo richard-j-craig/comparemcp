@@ -3,7 +3,7 @@ backend:
   phases:
     build:
       commands:
-        - cd amplify && npm ci
+        - cd amplify && npm install
         - npx ampx generate outputs --app-id $AWS_APP_ID --branch $AWS_BRANCH --format ts
 frontend:
   phases:
