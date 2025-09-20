@@ -1,0 +1,12 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-comparemcp-dev-authRole",
+      "UnauthRoleName": "amplify-comparemcp-dev-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::ACCOUNT:role/amplify-comparemcp-dev-authRole",
+      "UnauthRoleArn": "arn:aws:iam::ACCOUNT:role/amplify-comparemcp-dev-unauthRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "amplify-comparemcp-dev-deployment"
+    }
+  }
+}

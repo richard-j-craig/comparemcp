@@ -1,28 +1,63 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, FlatList } from 'react-native';
+import { StyleSheet, Text, View, FlatList, TextInput } from 'react-native';
+import { useState, useEffect } from 'react';
 
-const mockMcpServers = [
-  { id: '1', name: 'filesystem-mcp', description: 'File system operations MCP server' },
-  { id: '2', name: 'github-mcp', description: 'GitHub API MCP server' },
-  { id: '3', name: 'sqlite-mcp', description: 'SQLite database MCP server' },
-];
+const API_URL = 'https://your-api-id.execute-api.us-east-1.amazonaws.com/dev/search';
 
 export default function App() {
+  const [servers, setServers] = useState([]);
+  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  const fetchServers = async (query = '') => {
+    try {
+      setLoading(true);
+      const url = query ? `${API_URL}?q=${encodeURIComponent(query)}` : API_URL;
+      const response = await fetch(url);
+      const data = await response.json();
+      setServers(data.servers || []);
+    } catch (error) {
+      console.error('Error fetching servers:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchServers();
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchServers(search);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search]);
+
   const renderServer = ({ item }) => (
     <View style={styles.serverItem}>
       <Text style={styles.serverName}>{item.name}</Text>
       <Text style={styles.serverDescription}>{item.description}</Text>
+      <Text style={styles.serverMeta}>⭐ {item.stars} • {item.language}</Text>
     </View>
   );
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>MCP Server Comparison</Text>
+      <Text style={styles.title}>MCP Server Search</Text>
+      <TextInput
+        style={styles.searchInput}
+        placeholder="Search MCP servers..."
+        value={search}
+        onChangeText={setSearch}
+      />
       <FlatList
-        data={mockMcpServers}
+        data={servers}
         renderItem={renderServer}
         keyExtractor={(item) => item.id}
         style={styles.list}
+        refreshing={loading}
+        onRefresh={() => fetchServers(search)}
       />
       <StatusBar style="auto" />
     </View>
@@ -42,6 +77,15 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: 'center',
   },
+  searchInput: {
+    height: 40,
+    borderColor: '#ddd',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    marginBottom: 20,
+    fontSize: 16,
+  },
   list: {
     flex: 1,
   },
@@ -59,5 +103,10 @@ const styles = StyleSheet.create({
   serverDescription: {
     fontSize: 14,
     color: '#666',
+    marginBottom: 5,
+  },
+  serverMeta: {
+    fontSize: 12,
+    color: '#999',
   },
 });
