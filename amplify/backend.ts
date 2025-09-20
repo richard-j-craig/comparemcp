@@ -12,8 +12,3 @@ const mcpSearch = defineFunction({
 export const backend = defineBackend({
   mcpSearch
 });
-
-backend.mcpSearch.addHttpApi({
-  path: '/search',
-  methods: ['GET']
-});
