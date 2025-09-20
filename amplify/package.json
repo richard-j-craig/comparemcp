@@ -6,11 +6,10 @@
     "build": "tsc && node --loader ts-node/esm ./backend.ts",
     "sandbox": "ampx sandbox"
   },
-  "devDependencies": {
+  "dependencies": {
     "@aws-amplify/backend": "^1.0.0",
     "@aws-amplify/backend-cli": "^1.0.0",
     "typescript": "^5.0.0",
-    "@types/aws-lambda": "^8.10.0",
-    "ts-node": "^10.9.0"
+    "@types/aws-lambda": "^8.10.0"
   }
 }
