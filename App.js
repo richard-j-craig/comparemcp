@@ -44,7 +44,7 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>MCP Server Search</Text>
+      <Text style={styles.title}>MCP Server Directory</Text>
       <TextInput
         style={styles.searchInput}
         placeholder="Search MCP servers..."
