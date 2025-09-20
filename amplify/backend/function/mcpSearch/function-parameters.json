@@ -1,9 +1,0 @@
-{
-  "lambdaLayers": [],
-  "environmentVariableList": [
-    {
-      "cloudFormationParameterName": "githubApiKey",
-      "environmentVariableName": "GITHUB_API_KEY"
-    }
-  ]
-}
