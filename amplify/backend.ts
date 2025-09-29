@@ -9,6 +9,8 @@ const mcpSearch = defineFunction({
   }
 });
 
-export const backend = defineBackend({
+const backend = defineBackend({
   mcpSearch
 });
+
+export default backend;
