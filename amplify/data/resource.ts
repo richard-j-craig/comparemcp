@@ -1,5 +1,6 @@
 import { type ClientSchema, a, defineData } from "@aws-amplify/backend"
 import { sayHello } from "../functions/say-hello/resource"
+import { listMcpServers } from "../functions/list-mcp-servers/resource"
 
 const schema = a.schema({
   sayHello: a
@@ -10,6 +11,12 @@ const schema = a.schema({
     .returns(a.string())
     .authorization(allow => [allow.publicApiKey()])
     .handler(a.handler.function(sayHello)),
+
+  listMcpServers: a
+    .query()
+    .returns(a.string())
+    .authorization(allow => [allow.publicApiKey()])
+    .handler(a.handler.function(listMcpServers)),
 })
 
 export type Schema = ClientSchema<typeof schema>
