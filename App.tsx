@@ -80,8 +80,6 @@ export default function App() {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
       >
-        <Text style={styles.title}>MCP Server Directory</Text>
-
         <View style={styles.searchContainer}>
           <TextInput
             style={styles.searchInput}
