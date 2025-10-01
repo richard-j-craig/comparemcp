@@ -8,12 +8,18 @@ const schema = a.schema({
       name: a.string(),
     })
     .returns(a.string())
-    .authorization(allow => [allow.guest()])
+    .authorization(allow => [allow.publicApiKey()])
     .handler(a.handler.function(sayHello)),
 })
 
 export type Schema = ClientSchema<typeof schema>
 
 export const data = defineData({
-  schema
+  schema,
+  authorizationModes: {
+    defaultAuthorizationMode: "apiKey",
+    apiKeyAuthorizationMode: {
+      expiresInDays: 30,
+    },
+  },
 })
