@@ -1,6 +1,5 @@
 import { defineBackend } from '@aws-amplify/backend';
 import { data } from './data/resource';
-import { sayHello } from './functions/say-hello/resource';
 import { listMcpServers } from './functions/list-mcp-servers/resource';
 
 /**
@@ -8,6 +7,5 @@ import { listMcpServers } from './functions/list-mcp-servers/resource';
  */
 defineBackend({
   data,
-  sayHello,
   listMcpServers,
 });

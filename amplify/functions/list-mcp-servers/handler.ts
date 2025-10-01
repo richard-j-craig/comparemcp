@@ -1,40 +1,70 @@
 import type { Schema } from "../../data/resource"
 
-export const handler: Schema["listMcpServers"]["functionHandler"] = async (event) => {
-  // Return a list of MCP servers with dummy data
-  const servers = [
-    {
-      name: "GitHub MCP Server",
-      description: "Access GitHub repositories, issues, and pull requests through MCP",
-      link: "https://github.com/modelcontextprotocol/servers/tree/main/src/github"
-    },
-    {
-      name: "Filesystem MCP Server",
-      description: "Secure file operations with configurable access controls",
-      link: "https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem"
-    },
-    {
-      name: "PostgreSQL MCP Server",
-      description: "Database operations and schema inspection for PostgreSQL",
-      link: "https://github.com/modelcontextprotocol/servers/tree/main/src/postgres"
-    },
-    {
-      name: "Slack MCP Server",
-      description: "Read and send messages in Slack channels and DMs",
-      link: "https://github.com/modelcontextprotocol/servers/tree/main/src/slack"
-    },
-    {
-      name: "Google Drive MCP Server",
-      description: "Search and read files from Google Drive",
-      link: "https://github.com/modelcontextprotocol/servers/tree/main/src/gdrive"
-    },
-    {
-      name: "Puppeteer MCP Server",
-      description: "Browser automation and web scraping capabilities",
-      link: "https://github.com/modelcontextprotocol/servers/tree/main/src/puppeteer"
-    }
-  ];
+interface GitHubRepo {
+  name: string;
+  description: string | null;
+  html_url: string;
+  stargazers_count: number;
+  updated_at: string;
+}
 
-  return JSON.stringify(servers);
+interface McpServer {
+  name: string;
+  description: string;
+  link: string;
+  stars: number;
+  lastUpdated: string;
+}
+
+export const handler: Schema["listMcpServers"]["functionHandler"] = async (event) => {
+  const { searchTerm } = event.arguments;
+
+  try {
+    // Search for MCP server repositories on GitHub
+    const searchQuery = searchTerm
+      ? `mcp server ${searchTerm} in:name,description,readme`
+      : 'mcp server in:name,description,readme';
+
+    const response = await fetch(
+      `https://api.github.com/search/repositories?q=${encodeURIComponent(searchQuery)}&sort=stars&order=desc&per_page=20`,
+      {
+        headers: {
+          'Accept': 'application/vnd.github.v3+json',
+          'User-Agent': 'MCP-Server-Directory'
+        }
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`GitHub API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    const servers: McpServer[] = data.items.map((repo: GitHubRepo) => ({
+      name: repo.name,
+      description: repo.description || 'No description available',
+      link: repo.html_url,
+      stars: repo.stargazers_count,
+      lastUpdated: repo.updated_at
+    }));
+
+    return JSON.stringify(servers);
+  } catch (error) {
+    console.error('Error fetching MCP servers:', error);
+
+    // Return fallback data if GitHub API fails
+    const fallbackServers: McpServer[] = [
+      {
+        name: "modelcontextprotocol/servers",
+        description: "Official Model Context Protocol servers repository",
+        link: "https://github.com/modelcontextprotocol/servers",
+        stars: 0,
+        lastUpdated: new Date().toISOString()
+      }
+    ];
+
+    return JSON.stringify(fallbackServers);
+  }
 }
 

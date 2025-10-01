@@ -6,6 +6,8 @@ import {
   ScrollView,
   Linking,
   TouchableOpacity,
+  TextInput,
+  ActivityIndicator,
 } from "react-native";
 import { Schema } from "./amplify/data/resource";
 import { Amplify } from "aws-amplify";
@@ -21,44 +23,54 @@ interface McpServer {
   name: string;
   description: string;
   link: string;
+  stars: number;
+  lastUpdated: string;
 }
 
 export default function App() {
-  const [greeting, setGreeting] = useState<string>("");
   const [servers, setServers] = useState<McpServer[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchInput, setSearchInput] = useState<string>("");
+
+  const fetchServers = async (search: string = "") => {
+    setLoading(true);
+    setError(null);
+    try {
+      const serversResponse = await client.queries.listMcpServers({
+        searchTerm: search || null,
+      });
+      if (serversResponse.data) {
+        const parsedServers = JSON.parse(serversResponse.data);
+        setServers(parsedServers);
+      }
+    } catch (err) {
+      console.error("Error fetching data:", err);
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Fetch greeting
-        const greetingResponse = await client.queries.sayHello({
-          name: "Amplify",
-        });
-        if (greetingResponse.data) {
-          setGreeting(greetingResponse.data);
-        }
-
-        // Fetch MCP servers
-        const serversResponse = await client.queries.listMcpServers();
-        if (serversResponse.data) {
-          const parsedServers = JSON.parse(serversResponse.data);
-          setServers(parsedServers);
-        }
-      } catch (err) {
-        console.error("Error fetching data:", err);
-        setError(err instanceof Error ? err.message : "An error occurred");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    fetchServers();
   }, []);
+
+  const handleSearch = () => {
+    fetchServers(searchInput);
+  };
 
   const handleLinkPress = (url: string) => {
     Linking.openURL(url);
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   };
 
   return (
@@ -68,26 +80,66 @@ export default function App() {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
       >
-        {loading && <Text style={styles.loadingText}>Loading...</Text>}
+        <Text style={styles.title}>MCP Server Directory</Text>
+
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search MCP servers..."
+            value={searchInput}
+            onChangeText={setSearchInput}
+            onSubmitEditing={handleSearch}
+            returnKeyType="search"
+          />
+          <TouchableOpacity
+            style={styles.searchButton}
+            onPress={handleSearch}
+            disabled={loading}
+          >
+            <Text style={styles.searchButtonText}>
+              {loading ? "..." : "Search"}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {loading && (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#007AFF" />
+            <Text style={styles.loadingText}>Loading servers...</Text>
+          </View>
+        )}
+
         {error && <Text style={styles.errorText}>Error: {error}</Text>}
 
         {!loading && !error && (
           <>
-            <Text style={styles.title}>MCP Server Directory</Text>
-            {greeting && <Text style={styles.greeting}>{greeting}</Text>}
+            <Text style={styles.resultsCount}>
+              {servers.length} {servers.length === 1 ? "server" : "servers"}{" "}
+              found
+            </Text>
 
             <View style={styles.serverList}>
               {servers.map((server, index) => (
                 <View key={index} style={styles.serverCard}>
-                  <Text style={styles.serverName}>{server.name}</Text>
+                  <View style={styles.serverHeader}>
+                    <Text style={styles.serverName}>{server.name}</Text>
+                    <View style={styles.starsContainer}>
+                      <Text style={styles.starsText}>⭐ {server.stars}</Text>
+                    </View>
+                  </View>
                   <Text style={styles.serverDescription}>
                     {server.description}
                   </Text>
-                  <TouchableOpacity
-                    onPress={() => handleLinkPress(server.link)}
-                  >
-                    <Text style={styles.serverLink}>View on GitHub →</Text>
-                  </TouchableOpacity>
+                  <View style={styles.serverFooter}>
+                    <Text style={styles.lastUpdated}>
+                      Updated: {formatDate(server.lastUpdated)}
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => handleLinkPress(server.link)}
+                    >
+                      <Text style={styles.serverLink}>View on GitHub →</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               ))}
             </View>
@@ -113,21 +165,44 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: "bold",
-    marginBottom: 10,
+    marginBottom: 20,
     color: "#333",
     textAlign: "center",
   },
-  greeting: {
-    fontSize: 16,
-    color: "#666",
+  searchContainer: {
+    flexDirection: "row",
     marginBottom: 20,
-    textAlign: "center",
+    gap: 10,
+  },
+  searchInput: {
+    flex: 1,
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
+  searchButton: {
+    backgroundColor: "#007AFF",
+    borderRadius: 8,
+    paddingHorizontal: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  searchButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  loadingContainer: {
+    alignItems: "center",
+    marginTop: 50,
   },
   loadingText: {
-    fontSize: 18,
+    fontSize: 16,
     color: "#666",
-    textAlign: "center",
-    marginTop: 50,
+    marginTop: 10,
   },
   errorText: {
     fontSize: 16,
@@ -135,6 +210,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 50,
     padding: 20,
+  },
+  resultsCount: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 15,
+    textAlign: "center",
   },
   serverList: {
     gap: 15,
@@ -152,17 +233,42 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  serverHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
   serverName: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "bold",
     color: "#333",
-    marginBottom: 8,
+    flex: 1,
+  },
+  starsContainer: {
+    backgroundColor: "#f0f0f0",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  starsText: {
+    fontSize: 12,
+    color: "#666",
   },
   serverDescription: {
     fontSize: 14,
     color: "#666",
     lineHeight: 20,
     marginBottom: 12,
+  },
+  serverFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  lastUpdated: {
+    fontSize: 12,
+    color: "#999",
   },
   serverLink: {
     fontSize: 14,
